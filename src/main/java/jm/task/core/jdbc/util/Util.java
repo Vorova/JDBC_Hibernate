@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class Util {
 
-    public Connection createConnection() {
+    public static Connection JDBCConnection() {
         String USER = "user";
         String PASSWORD = "password";
         String URL = "jdbc:mysql://localhost:3306/test";
@@ -16,7 +16,4 @@ public class Util {
             throw new RuntimeException(e);
         }
     }
-
-
-
 }

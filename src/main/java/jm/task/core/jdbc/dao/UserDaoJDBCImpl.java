@@ -9,19 +9,18 @@ import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
 
-    private final Connection connection;
+    private final Connection connection = Util.JDBCConnection();
 
     public UserDaoJDBCImpl() {
-        Util util = new Util();
-        connection = util.createConnection();
+
     }
 
     public void createUsersTable() {
         String sql = "CREATE TABLE users" +
-                "   (id       int auto_increment," +
+                "   (id       bigint auto_increment," +
                 "    userName character(45) null," +
                 "    lastName character(45) null," +
-                "    age      int           null," +
+                "    age      tinyint       null," +
                 "  PRIMARY KEY ( id ))";
         try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
@@ -53,11 +52,14 @@ public class UserDaoJDBCImpl implements UserDao {
         String sql = "INSERT INTO users(`userName`, `lastName`, `age`) VALUES (?, ?, ?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             connection.setAutoCommit(false);
+
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setInt(3, age);
             preparedStatement.executeUpdate();
+
             connection.commit();
+
             System.out.println("Пользователь с именем - " + name + " добавлен в базу данных");
         } catch (SQLException e) {
             try {
@@ -72,10 +74,20 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void removeUserById(long id) {
-        String sql = "DELETE FROM `users` WHERE id = " + id;
-        try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate(sql);
+        String sql = "DELETE FROM `users` WHERE id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
+
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate(sql);
+
+            connection.commit();
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
             System.err.println(e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -84,29 +96,29 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-
         String sql = "SELECT * FROM `users`";
         try (Statement statement = connection.createStatement()) {
-            connection.setAutoCommit(false);
             ResultSet rs = statement.executeQuery(sql);
-            connection.commit();
             while (rs.next()) {
-                User user = new User();
+                  /*
+                  Верно ли я понял, что замечание:
+                  "Получить всех пользователей в листе можно 1 запросом через 1 класс, слишком сложно у тебя"
+                  подразумевает создание обэекта user через конструктор, а не через сеттеры?
 
-                user.setId(rs.getLong("id"));
-                user.setName(rs.getString("userName"));
-                user.setLastName(rs.getString("lastName"));
-                user.setAge(rs.getByte("age"));
-
-                users.add(user);
+                  Закомментированный код заменил на строку ниже
+                  */
+                  users.add(new User(
+                          rs.getString("userName"),
+                          rs.getString("lastName"),
+                          rs.getByte("age")));
+//                User user = new User();
+//                user.setId(rs.getLong("id"));
+//                user.setName(rs.getString("userName"));
+//                user.setLastName(rs.getString("lastName"));
+//                user.setAge(rs.getByte("age"));
+//                users.add(user);
             }
-
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
-            }
             System.err.println(e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);

@@ -17,10 +17,10 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void createUsersTable() {
         String sql = "CREATE TABLE users" +
-                "   (id       bigint auto_increment," +
-                "    userName character(45) null," +
-                "    lastName character(45) null," +
-                "    age      tinyint       null," +
+                "   (id        bigint auto_increment," +
+                "    user_name character(45) null," +
+                "    last_name character(45) null," +
+                "    age       tinyint       null," +
                 "  PRIMARY KEY ( id ))";
         try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
@@ -41,15 +41,22 @@ public class UserDaoJDBCImpl implements UserDao {
     public void dropUsersTable() {
         String sql = "DROP TABLE `users`";
         try (Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
             statement.executeUpdate(sql);
+            connection.commit();
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        String sql = "INSERT INTO users(`userName`, `lastName`, `age`) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users(`user_name`, `last_name`, `age`) VALUES (?, ?, ?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             connection.setAutoCommit(false);
 
@@ -100,23 +107,10 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
-                  /*
-                  Верно ли я понял, что замечание:
-                  "Получить всех пользователей в листе можно 1 запросом через 1 класс, слишком сложно у тебя"
-                  подразумевает создание обэекта user через конструктор, а не через сеттеры?
-
-                  Закомментированный код заменил на строку ниже
-                  */
                   users.add(new User(
-                          rs.getString("userName"),
-                          rs.getString("lastName"),
+                          rs.getString("user_name"),
+                          rs.getString("last_name"),
                           rs.getByte("age")));
-//                User user = new User();
-//                user.setId(rs.getLong("id"));
-//                user.setName(rs.getString("userName"));
-//                user.setLastName(rs.getString("lastName"));
-//                user.setAge(rs.getByte("age"));
-//                users.add(user);
             }
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -129,8 +123,15 @@ public class UserDaoJDBCImpl implements UserDao {
     public void cleanUsersTable() {
         String sql = "TRUNCATE TABLE `users`";
         try (Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
             statement.executeUpdate(sql);
+            connection.commit();
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
             System.err.println(e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);

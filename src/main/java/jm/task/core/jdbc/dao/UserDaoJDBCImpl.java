@@ -39,7 +39,7 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void dropUsersTable() {
-        String sql = "DROP TABLE `users`";
+        String sql = "DROP TABLE `user`";
         try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
             statement.executeUpdate(sql);
@@ -56,7 +56,7 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        String sql = "INSERT INTO users(`user_name`, `last_name`, `age`) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO user(`user_name`, `last_name`, `age`) VALUES (?, ?, ?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             connection.setAutoCommit(false);
 
@@ -81,7 +81,7 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void removeUserById(long id) {
-        String sql = "DELETE FROM `users` WHERE id = ?";
+        String sql = "DELETE FROM `user` WHERE id = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             connection.setAutoCommit(false);
 
@@ -103,7 +103,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM `users`";
+        String sql = "SELECT * FROM `user`";
         try (Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
@@ -121,7 +121,7 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void cleanUsersTable() {
-        String sql = "TRUNCATE TABLE `users`";
+        String sql = "TRUNCATE TABLE `user`";
         try (Statement statement = connection.createStatement()) {
             connection.setAutoCommit(false);
             statement.executeUpdate(sql);

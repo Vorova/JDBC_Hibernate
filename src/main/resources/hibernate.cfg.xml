@@ -6,7 +6,7 @@
     <session-factory>
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
 
-        <property name="connection.url">jdbc:mysql://localhost:3306/test?useSSL=false</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/test?useSSL=false&amp;serverTimezone=UTC</property>
         <property name="connection.username">user</property>
         <property name="connection.password">password</property>
 
@@ -14,6 +14,7 @@
         
         <property name="show_sql">false</property>
 
+        <mapping class="jm.task.core.jdbc.model.User"/>
 
     </session-factory>
 </hibernate-configuration>

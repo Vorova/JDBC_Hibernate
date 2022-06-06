@@ -12,7 +12,7 @@ import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
 
-    private final SessionFactory sessionFactory = Util.sessionFactory();
+    private final SessionFactory sessionFactory = Util.getSessionFactory();
 
     public UserDaoHibernateImpl() {
 
@@ -20,71 +20,62 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void createUsersTable() {
-        Session session = sessionFactory.openSession();
-        String sql = "CREATE TABLE user" +
-                "   (id        bigint auto_increment," +
-                "    user_name character(45) null," +
-                "    last_name character(45) null," +
-                "    age       tinyint       null," +
-                "  PRIMARY KEY ( id ))";
-        session.beginTransaction();
-        try {
+
+        String sql = """
+             CREATE TABLE user ( 
+                id        bigint auto_increment,
+                user_name character(45) null,
+                last_name character(45) null,
+                age       tinyint       null,
+                    PRIMARY KEY ( id )
+              );""";
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
             session.createNativeQuery(sql, User.class).executeUpdate();
             session.getTransaction().commit();
         } catch (Exception e) {
-            session.getTransaction().rollback();
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        session.close();
     }
 
     @Override
     public void dropUsersTable() {
-        Session session = sessionFactory.openSession();
         String sql = "DROP TABLE `user`";
-        session.beginTransaction();
-        try {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
             session.createNativeQuery(sql, User.class).executeUpdate();
             session.getTransaction().commit();
         } catch (Exception e) {
-            session.getTransaction().rollback();
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        session.close();
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        Session session = sessionFactory.openSession();
         User user = new User(name, lastName, age);
-        try {
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
             session.persist(user);
             session.getTransaction().commit();
             System.out.println("Пользователь с именем - " + name + " сохранён!");
         } catch (Exception e) {
-            session.getTransaction().rollback();
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        session.close();
     }
 
     @Override
     public void removeUserById(long id) {
-        Session session = sessionFactory.openSession();
-
         User user = new User();
         user.setId(id);
-
-        try {
+        try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
             session.remove(user);
             session.getTransaction().commit();
         } catch (Exception e) {
-            session.getTransaction().rollback();
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
@@ -107,12 +98,16 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        Session session = sessionFactory.openSession();
         List<User> users = getAllUsers();
-        for (User user : users) {
-            session.beginTransaction();
-            session.remove(user);
-            session.getTransaction().commit();
+        try (Session session = sessionFactory.openSession()) {
+            for (User user : users) {
+                session.beginTransaction();
+                session.remove(user);
+                session.getTransaction().commit();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 }

@@ -16,7 +16,9 @@ public class Util {
     private static final String PASSWORD = "password";
     private static final String URL = "jdbc:mysql://localhost:3306/test";
 
-    public static SessionFactory sessionFactory () {
+    private static final SessionFactory sessionFactory;
+
+    static {
         try {
             Configuration configuration = new Configuration();
             Properties prop= new Properties();
@@ -30,7 +32,7 @@ public class Util {
             configuration.addProperties(prop);
             configuration.addAnnotatedClass(User.class);
 
-            return configuration.configure().buildSessionFactory();
+            sessionFactory = configuration.configure().buildSessionFactory();
         } catch (Throwable ex) {
             System.err.println("Initial SessionFactory creation failed." + ex);
             throw new ExceptionInInitializerError(ex);
@@ -43,6 +45,11 @@ public class Util {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static SessionFactory getSessionFactory()
+    {
+        return sessionFactory;
     }
 
 }

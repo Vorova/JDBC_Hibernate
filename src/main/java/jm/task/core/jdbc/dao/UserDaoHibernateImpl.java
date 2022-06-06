@@ -22,7 +22,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public void createUsersTable() {
 
         String sql = """
-             CREATE TABLE user ( 
+              CREATE TABLE user (
                 id        bigint auto_increment,
                 user_name character(45) null,
                 last_name character(45) null,
@@ -32,8 +32,12 @@ public class UserDaoHibernateImpl implements UserDao {
 
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.createNativeQuery(sql, User.class).executeUpdate();
-            session.getTransaction().commit();
+            try {
+                session.createNativeQuery(sql, User.class).executeUpdate();
+                session.getTransaction().commit();
+            } catch (Exception e) {
+                session.getTransaction().rollback();
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -42,11 +46,17 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void dropUsersTable() {
-        String sql = "DROP TABLE `user`";
+        String sql = """
+               DROP TABLE `user`
+                """;
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.createNativeQuery(sql, User.class).executeUpdate();
-            session.getTransaction().commit();
+            try {
+                session.createNativeQuery(sql, User.class).executeUpdate();
+                session.getTransaction().commit();
+            } catch (Exception e) {
+                session.getTransaction().rollback();
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -58,8 +68,12 @@ public class UserDaoHibernateImpl implements UserDao {
         User user = new User(name, lastName, age);
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.persist(user);
-            session.getTransaction().commit();
+            try {
+                session.persist(user);
+                session.getTransaction().commit();
+            } catch (Exception e) {
+                session.getTransaction().rollback();
+            }
             System.out.println("Пользователь с именем - " + name + " сохранён!");
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -73,8 +87,12 @@ public class UserDaoHibernateImpl implements UserDao {
         user.setId(id);
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
-            session.remove(user);
-            session.getTransaction().commit();
+            try {
+                session.remove(user);
+                session.getTransaction().commit();
+            } catch (Exception e) {
+                session.getTransaction().rollback();
+            }
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -98,16 +116,21 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        List<User> users = getAllUsers();
-        try (Session session = sessionFactory.openSession()) {
-            for (User user : users) {
-                session.beginTransaction();
-                session.remove(user);
-                session.getTransaction().commit();
+        /*
+            List<User> users = getAllUsers();
+            try (Session session = sessionFactory.openSession()) {
+                for (User user : users) {
+                    session.beginTransaction();
+                    session.remove(user);
+                    session.getTransaction().commit();
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
+         */
+        // A faster option
+        dropUsersTable();
+        createUsersTable();
     }
 }

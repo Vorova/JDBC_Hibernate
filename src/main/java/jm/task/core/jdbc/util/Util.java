@@ -10,33 +10,39 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-public class Util {
+public final class Util {
 
     private static final String USER = "user";
     private static final String PASSWORD = "password";
     private static final String URL = "jdbc:mysql://localhost:3306/test";
 
-    private static final SessionFactory sessionFactory;
+    private static SessionFactory sessionFactory;
 
-    static {
-        try {
-            Configuration configuration = new Configuration();
-            Properties prop= new Properties();
+    private Util(){}
 
-            prop.put(Environment.URL, URL);
-            prop.put(Environment.USER, USER);
-            prop.put(Environment.PASS, PASSWORD);
-            prop.put(Environment.SHOW_SQL, true);
-            prop.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
+    public static SessionFactory getSessionFactory() {
+        if (sessionFactory == null) {
+            try {
+                Configuration configuration = new Configuration();
+                Properties prop= new Properties();
 
-            configuration.addProperties(prop);
-            configuration.addAnnotatedClass(User.class);
+                prop.put(Environment.URL, URL);
+                prop.put(Environment.USER, USER);
+                prop.put(Environment.PASS, PASSWORD);
+                prop.put(Environment.SHOW_SQL, true);
+                prop.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
 
-            sessionFactory = configuration.configure().buildSessionFactory();
-        } catch (Throwable ex) {
-            System.err.println("Initial SessionFactory creation failed." + ex);
-            throw new ExceptionInInitializerError(ex);
+                configuration.addProperties(prop);
+                configuration.addAnnotatedClass(User.class);
+
+                sessionFactory = configuration.configure().buildSessionFactory();
+            } catch (Throwable ex) {
+                System.err.println("Initial SessionFactory creation failed." + ex);
+                throw new ExceptionInInitializerError(ex);
+            }
         }
+
+        return sessionFactory;
     }
 
     public static Connection JDBCConnection() {
@@ -45,11 +51,6 @@ public class Util {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static SessionFactory getSessionFactory()
-    {
-        return sessionFactory;
     }
 
 }
